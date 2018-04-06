@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd /home/blackgeorge/documents/pl2/garbagecollectors/test/
-rm output.txt
-./debug_vm pp.b > output.txt
