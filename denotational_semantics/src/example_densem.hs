@@ -1,59 +1,42 @@
--- ------------------------------------------------------------------------------
--- Nikos Mavrogeorgis 03113087
--- GHCi, version 7.10.3
--- TODO : Usage
--- ------------------------------------------------------------------------------
-
-
---
--- Syntax
--- We present WHILE++ syntax in exact correspondence with the assignment's presentation.
--- 
+-- syntax
 
 type Var = String
 
-data C = Cskip | N | Cseq C C | Cif B C C | Cfor N C | Cwhile B C
+data C = Cskip | Cassign Var N | Cseq C C | Cfor N C | Cif B C C
+               | Cwhile B C
   deriving (Show)
 
-data N = Nzero | Nsucc N | Npred N | Nvar Var | Nassign Var N | Npp Var | Nmm Var
+data N = Nzero | Nsucc N | Npred N | Nif B N N | Nvar Var
   deriving (Show)
 
 data B = Btrue | Bfalse | Blt N N | Beq N N | Bnot B
   deriving (Show)
 
--- Semantic domains
+-- semantic domains
 
 type S = Var -> Integer
 
---
--- Semantic functions
--- 
-
--- Commands
+-- semantic functions
 
 semC :: C -> S -> S
 semC Cskip s = s
+semC (Cassign x n) s = update s x (semN n s)
 semC (Cseq c1 c2) s = semC c2 (semC c1 s)
-semC (Cif b c1 c2) s | semB b s  = semC c1 s
-                     | otherwise = semC c2 s
 semC (Cfor n c) s = expon i (semC c) s
   where i = semN n s
+semC (Cif b c1 c2) s | semB b s  = semC c1 s
+                     | otherwise = semC c2 s
 semC (Cwhile b c) s = fix bigF s
   where bigF f s | semB b s  = f (semC c s)
                  | otherwise = s
-
--- Numbers
 
 semN :: N -> S -> Integer
 semN Nzero s = 0
 semN (Nsucc n) s = semN n s + 1
 semN (Npred n) s = semN n s - 1
+semN (Nif b n1 n2) s | semB b s  = semN n1 s
+                     | otherwise = semN n2 s
 semN (Nvar x) s = s x
-semN (Nassign x n) s = update s x (semN n s)
-semN (Npp x) = 
-semN (Nmm x) = 
-
--- Booleans
 
 semB :: B -> S -> Bool
 semB Btrue s = True
