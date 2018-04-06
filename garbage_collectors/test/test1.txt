@@ -1,0 +1,9 @@
+push1 7
+push2 8
+cons
+push1 9
+cons 
+hd
+tl
+out
+halt

@@ -1,0 +1,19 @@
+{- (Comments are in Greek, iso8859-7)
+ -
+ - Γράψτε μία "συνάρτηση" που να διαβάζει τα δεδομένα εισόδου για
+ - την άσκηση "Κι άλλη Haskell για ενεργειακούς" και να τα εμφανίζει
+ - στην οθόνη.
+ -}
+
+main = do
+  all <- getContents
+  let (sn : sl : sb : rest) = words all
+  let n = read sn
+  let l = read sl
+  let b = read sb
+  let x = map read rest
+  -- Τα type annotations μάλλον δε θα χρειάζονται στη δική σας λύση...
+  print (n :: Int)
+  print (l :: Int)
+  print (b :: Integer)
+  print (x :: [Int])

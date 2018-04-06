@@ -1,0 +1,119 @@
+\documentclass[a4paper, 11pt, twoside]{article}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+\usepackage{listings}% http://ctan.org/pkg/listings
+\lstset{
+  basicstyle=\ttfamily,
+  mathescape
+}
+\usepackage{array}
+\usepackage{bussproofs}
+\usepackage[english, greek]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+%\usepackage{turnstile}
+\usepackage{hyperref}
+\newcommand\fnurl[2]{%
+  \href{#2}{#1}\footnote{\url{#2}}%
+}
+\graphicspath{ {screens/} }
+\begin{document}
+\begin{titlepage}
+	\centering
+	\includegraphics[width=0.3\textwidth]{ntua}\par\vspace{1cm}
+	{\scshape\LARGE Εθνικό Μετσόβιο Πολυτεχνείο \\ Σχολή Ηλεκτρολόγων 
+	Μηχανικών και Μηχανικών Υπολογιστών \par}
+	\vspace{1cm}
+	{\scshape\Large Γλώσσες Προγραμματισμού ΙΙ\par}
+	\vspace{1.5cm}
+	{\huge\bfseries 4η Σειρά Ασκήσεων \\ \par}
+	\vspace{1cm}
+	{\Large Συστήματα Τύπων}
+	\vspace{2cm}
+	
+	{\Large\itshape Μαυρογεώργης Νικόλαος \\ 03113087\par }
+
+	\vspace{2cm}
+	\vfill
+
+\end{titlepage}
+
+\section*{Μέρος Πρώτο -  Αυτοεφαρμογή}
+Έστω, ότι υπάρχει περιβάλλον $\Gamma$ και τύπος $\tau$, έτσι ώστε να ισχύει $\Gamma \vdash xx : \tau$.
+
+Γνωρίζουμε ότι ισχύει ο ακόλουθος κανόνας τύπων:
+
+\begin{otherlanguage}{english}
+
+\[
+\begin{tabular}{@{} l >{\centering\arraybackslash}m{.7\textwidth} @{}}
+\textsc{Function Application} &
+  \begin{prooftree}
+  \AxiomC{$\Gamma \vdash e_1 : \tau \rightarrow \tau '$}
+  \AxiomC{$\Gamma \vdash e_2 : \tau $}
+  \BinaryInfC{$\Gamma \vdash e_1 e_2: \tau '$}
+  \end{prooftree}
+\\
+
+\end{tabular}
+\]
+\end{otherlanguage}
+o οποίος για $e_1=e_2=x$ γίνεται:
+
+\begin{otherlanguage}{english}
+
+\[
+\begin{tabular}{@{} l >{\centering\arraybackslash}m{.7\textwidth} @{}}
+\textsc{Function Application} &
+  \begin{prooftree}
+  \AxiomC{$\Gamma \vdash x : \tau \rightarrow \tau '$}
+  \AxiomC{$\Gamma \vdash x : \tau $}
+  \BinaryInfC{$\Gamma \vdash x x: \tau '$}
+  \end{prooftree}
+\\
+
+\end{tabular}
+\]
+\end{otherlanguage}
+
+Από το λήμμα αντιστροφής (το οποίο αποδεικνύεται άμεσα) για αυτόν τον κανόνα , ισχύει ότι: Αν $\Gamma \vdash x x: \tau$, τότε πρέπει να υπάρχει τύπος $aux$, τέτοιος ώστε $x : aux \rightarrow \tau$ , αλλά και $x : aux$. Προφανώς, οι τύποι $aux$ και $\tau \rightarrow aux$, δεν μπορεί να ταυτίζονται, επομένως καταλήξαμε σε άτοπο.
+
+Άρα, δεν υπάρχει περιβάλλον $\Gamma$ και τύπος $\tau$, έτσι ώστε να ισχύει $\Gamma \vdash xx : \tau$.
+
+\section*{Μέρος Δεύτερο - Αναφορές και Αναδρομή}
+Για διευκόλυνση έχουμε συμπεριλάβει και τα \textlatin{let bindings} στη γλώσσα μας.
+
+1. Ένα πρόγραμμα που δεν τερματίζει, θα μπορούσε να είναι η κλήση μιας αναδρομικής συνάρτησης που καλεί τον εαυτό της επ' άπειρον. Η συνάρτηση είναι η:
+
+\begin{otherlanguage}{english}
+\begin{lstlisting}
+endless $\equiv$ $\lambda$.n : Nat.
+    let 
+        r = ref ($\lambda$x : Nat.x + 1)
+    in
+        let
+            f = $\lambda$n : Nat.(!r)n
+        in
+            r := f;
+            f n
+\end{lstlisting}
+\end{otherlanguage}
+
+Οπότε, η κλήση $(endless~1)$, είναι ένα πρόγραμμα που δεν τερματίζει.
+\newpage
+2. Η συνάρτηση \textlatin{fact} για τον υπολογισμό του παραγοντικού, είναι η εξής:
+
+\begin{otherlanguage}{english}
+\begin{lstlisting}
+fact $\equiv$ $\lambda$ .n : Nat.
+    let 
+        r = ref ($\lambda$ x : Nat.x + 1)
+    in
+        let
+            f = $\lambda$ n : Nat.if n <= 1 then 1 else n * ((!r)(n - 1))
+        in
+            r := f;
+            f n 
+\end{lstlisting}
+\end{otherlanguage}
+\end{document}
