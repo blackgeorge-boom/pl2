@@ -82,4 +82,23 @@ run c = print (fst (semC c s0) "result")
 
 ex0 = Nassign "result" (makeN 42)
 
+ex1 = Cseq (Nassign "result" Nzero)
+           (Cfor (makeN 6) (
+              Cfor (makeN 7) (
+                Nassign "result" (Nsucc (Nvar "result"))
+              )
+           ))
+
+ex2 = Cseq (Nassign "x" (makeN 42))
+      (Cseq (Nassign "result" Nzero)
+            (Cwhile (Blt Nzero (Nvar "x"))
+              (Cseq (Nassign "x" (Npred (Nvar "x")))
+                    (Nassign "result" (Nsucc (Nvar "result"))))))
+
+ex3 = Cseq (Nassign "x" (makeN 42))
+      (Cseq (Nassign "result" Nzero)
+            (Cwhile (Blt Nzero (Nvar "x"))
+              (Cseq (Nassign "x" (Npred (Nvar "x")))
+                    (Npp "result"))))
+
 fix f = f (fix f)
