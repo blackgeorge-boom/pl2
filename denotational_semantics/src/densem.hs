@@ -8,11 +8,14 @@
 --
 -- Syntax
 -- We present WHILE++ syntax in exact correspondence with the assignment's presentation.
+-- We merge C and N rules.
 -- 
 
 type Var = String
 
-data C = Cskip | Cseq C C | Cif B C C | Cfor C C | Cwhile B C | Nzero | Nsucc C | Npred C | Nvar Var | Nassign Var C | Npp Var | Nmm Var
+data C = Cskip | 
+		 Nzero | Nsucc C | Npred C | Nvar Var | Nassign Var C | Npp Var | Nmm Var |
+		 Cseq C C | Cif B C C | Cfor C C | Cwhile B C  
   deriving (Show)
 
 data B = Btrue | Bfalse | Blt C C | Beq C C | Bnot B
@@ -24,12 +27,28 @@ type S = Var -> Integer
 
 --
 -- Semantic functions
+-- Every expression in C rules (either command or number), is evaluated as a tuple (State, Integer). 
+-- Meaning that : 
+-- 		1) It may change the current variable state, which is returned. 
+-- 		2) It will return a number as a side effect. 
+--
+-- The evaluation of N-rules (Nzero, Nsucc etc.) is generally obvious. Concerning the returned Integer, 
+-- the rule Nassign returns the value assigned. The rule Npp (Nmm), returns the value of the variable 
+-- after adding (subtracting) 1.
+--
+-- The evaluation of C-rules (Cskip, Cseq etc.), concerning the returned Integer goes like this:
+-- The rule Cskip returns the value 0. This makes sense, if we write "Cfor Cskip C", which is 
+-- equivalent to Cskip itself (nothing is done).
+-- 
+--
+--
+-- Every expression in B rule, is evaluated as a boolean value.
 -- 
 
 -- Commands
 
 semC :: C -> S -> (S, Integer)
-semC Cskip s = (s, -1)
+semC Cskip s = (s, 0)
 semC (Cseq c1 c2) s = semC c2 (fst (semC c1 s))
 semC (Cif b c1 c2) s | semB b s  = semC c1 s
                      | otherwise = semC c2 s
@@ -71,7 +90,7 @@ expon n f = f . fst . expon (n-1) f
 update s x n y | x == y    = n
                | otherwise = s y
 
--- example
+-- Examples
  
 makeN 0 = Nzero
 makeN n = Nsucc (makeN (n-1))
@@ -95,10 +114,22 @@ ex2 = Cseq (Nassign "x" (makeN 42))
               (Cseq (Nassign "x" (Npred (Nvar "x")))
                     (Nassign "result" (Nsucc (Nvar "result"))))))
 
+-- Usage of x++
+
 ex3 = Cseq (Nassign "x" (makeN 42))
       (Cseq (Nassign "result" Nzero)
             (Cwhile (Blt Nzero (Nvar "x"))
               (Cseq (Nassign "x" (Npred (Nvar "x")))
                     (Npp "result"))))
+
+-- Usage of Cskip as a value
+
+ex4 = Cseq (Nassign "result" Cskip)
+           (Cfor (makeN 6) (
+              Cfor (makeN 7) (
+                Nassign "result" (Nsucc (Nvar "result"))
+              )
+           ))
+
 
 fix f = f (fix f)
