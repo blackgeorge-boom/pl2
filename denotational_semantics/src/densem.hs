@@ -12,13 +12,10 @@
 
 type Var = String
 
-data C = Cskip | N | Cseq C C | Cif B C C | Cfor N C | Cwhile B C
+data C = Cskip | Cseq C C | Cif B C C | Cfor C C | Cwhile B C | Nzero | Nsucc C | Npred C | Nvar Var | Nassign Var C | Npp Var | Nmm Var
   deriving (Show)
 
-data N = Nzero | Nsucc N | Npred N | Nvar Var | Nassign Var N | Npp Var | Nmm Var
-  deriving (Show)
-
-data B = Btrue | Bfalse | Blt N N | Beq N N | Bnot B
+data B = Btrue | Bfalse | Blt C C | Beq C C | Bnot B
   deriving (Show)
 
 -- Semantic domains
@@ -37,34 +34,33 @@ semC (Cseq c1 c2) s = semC c2 (fst (semC c1 s))
 semC (Cif b c1 c2) s | semB b s  = semC c1 s
                      | otherwise = semC c2 s
 semC (Cfor n c) s = expon i (semC c) (s, 0)
-  where i = snd (semN n s)
+  where i = snd (semC n s)
 semC (Cwhile b c) s = fix bigF s
   where bigF f s | semB b s  = f (fst (semC c s))
                  | otherwise = (s, 0)
 
 -- Numbers
 
-semN :: N -> S -> (S, Integer)
-semN Nzero s = (s,0)
-semN (Nsucc n) s = (s, value + 1)
-	where value = snd (semN n s)
-semN (Npred n) s = (s, value - 1)
-	where value = snd (semN n s)
-semN (Nvar x) s = (s, s x)
-semN (Nassign x n) s = (update s x value, value)
-	where value = snd (semN n s)
-semN (Npp x) s = (update s x n, n)
-	where n = snd (semN (Nvar x) s) + 1 
-semN (Nmm x) s = (update s x n, n)
-	where n = snd (semN (Nvar x) s) - 1 
+semC Nzero s = (s,0)
+semC (Nsucc n) s = (s, value + 1)
+	where value = snd (semC n s)
+semC (Npred n) s = (s, value - 1)
+	where value = snd (semC n s)
+semC (Nvar x) s = (s, s x)
+semC (Nassign x n) s = (update s x value, value)
+	where value = snd (semC n s)
+semC (Npp x) s = (update s x n, n)
+	where n = snd (semC (Nvar x) s) + 1 
+semC (Nmm x) s = (update s x n, n)
+	where n = snd (semC (Nvar x) s) - 1 
 
 -- Booleans
 
 semB :: B -> S -> Bool
 semB Btrue s = True
 semB Bfalse s = False
-semB (Blt n1 n2) s = snd (semN n1 s) < snd (semN n2 s)
-semB (Beq n1 n2) s = snd (semN n1 s) == snd (semN n2 s)
+semB (Blt n1 n2) s = snd (semC n1 s) < snd (semC n2 s)
+semB (Beq n1 n2) s = snd (semC n1 s) == snd (semC n2 s)
 semB (Bnot b) s = not (semB b s)
 
 -- auxiliary functions
@@ -82,7 +78,7 @@ makeN n = Nsucc (makeN (n-1))
 
 s0 x = error ("not initialized variable " ++ x)
 
-run c = print (fst (semN c s0) "result")
+run c = print (fst (semC c s0) "result")
 
 ex0 = Nassign "result" (makeN 42)
 
