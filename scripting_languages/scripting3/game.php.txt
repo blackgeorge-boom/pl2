@@ -1,0 +1,52 @@
+<?php
+if ("${_SERVER['QUERY_STRING']}" == "")
+  $self = "${_SERVER['PHP_SELF']}";
+else
+  $self = "${_SERVER['PHP_SELF']}?${_SERVER['QUERY_STRING']}";
+
+session_start();
+
+if (!isset($_SESSION['question'])) {
+  $_SESSION['question'] = rand(0, 1000);
+  $_SESSION['expected'] = $_SESSION['question'] *
+                          $_SESSION['question'];
+}
+?>
+
+<html>
+<head>
+<title>My silly game</title>
+</head>
+<body>
+<p>What is the square of
+   <?php echo $_SESSION['question']; ?>?</p>
+<?php
+  if (isset($_REQUEST['answer'])) {
+    $answer = $_REQUEST['answer'];
+    if ($answer == $_SESSION['expected']) {
+      unset($_SESSION['question']);
+  ?>
+  <p>Correct!</p>
+  <form action="<?php echo $self; ?>">
+    <input type="submit" value="Play again!">
+  </form>
+  <?php
+    } else {
+  ?>
+  <p>Wrong!</p>
+  <form action="<?php echo $self; ?>">
+    <input type="submit" value="Try again!">
+  </form>
+  <?php
+    }
+  } else {
+  ?>
+ <form action="<?php echo $self; ?>">
+  <label>answer: <input name="answer" size="5"></label>
+  <input type="submit" value="Submit!">
+</form>
+  <?php
+  }
+  ?>
+</body>
+</html>

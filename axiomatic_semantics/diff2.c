@@ -1,8 +1,3 @@
-/*
- * Nikos Mavrogeorgis 03113087
- * Frama-C version : Sulfur-20171101
- */
-
 #include <stdbool.h> 
 #define MAXV 1000000 
 
