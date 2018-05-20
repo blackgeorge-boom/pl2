@@ -7,6 +7,43 @@
 </head>
 <body style="background-color:powderblue;">  
 
+  <?php
+  if ("${_SERVER['QUERY_STRING']}" == "")
+    $self = "${_SERVER['PHP_SELF']}";
+  else
+    $self = "${_SERVER['PHP_SELF']}?${_SERVER['QUERY_STRING']}";
+
+  session_start();
+
+  if (!isset($_SESSION['question'])) {
+    $_SESSION['question'] = substr(md5(rand()), 4, 4);
+    $_SESSION['expected'] = $_SESSION['question'] *
+                            $_SESSION['question'];
+  }
+  ?>
+
+  <?php
+  // define variables and set to empty values
+  $bitcoin = $hashed_str = "";
+
+  $test = substr(md5(rand()), 4, 4);
+  echo $test;
+
+  function test_input($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+  }
+
+  function get_magic($data) {
+    $data = test_input($data);
+    $hashed_str = hash('sha256',hex2bin($data));
+    $hashed_str = hash('sha256',hex2bin($hashed_str));
+    return substr($hashed_str, 0, 4);
+  }
+  ?>
+
 <h1> Gimme a bitcoin! </h1>
 <div>
 <p>For the purpose of this exercise, <span style="color:blue">bitcoins</span> are 256-bit hexadecimal numbers, which, when hashed twice using SHA256, start with the 16-bit <span style="color:blue">magic code</span> given on this page. Notice that the magic code frequently changes.
@@ -24,109 +61,60 @@ Magic codes are represented as strings of 4 hexadecimal digits.
   <span style="color:red">Example:</span> If the magic code is 4217, the following string is a bitcoin worth 7.99 euro:
   <span style="background-color:violet">796fae438ebdc83ac3a4e8a071d71b1f0f0eace40d8a5b92bb64b1e9ed746066</span>
 </div>
+
 <br>
+
 <div>
   <span>I'd like to have 2000.00 euros, you still owe me ????.</span>
   <br><br>
-  <span>The magic code is ????</span>
+
+  <?php
+  if (isset($_REQUEST['answer'])) {
+    $answer = $_REQUEST['answer'];
+    if (get_magic($answer) == $_REQUEST['question']) {
+  ?>
+  <p>Correct!</p>
+  <form action="<?php echo $self; ?>">
+    <input type="submit" value="Play again!">
+  </form>
+  <?php
+    } else {
+  ?>
+  <p>This is not a valid bitcoin! :-(</p>
+  <form action="<?php echo $self; ?>">
+    <input type="submit" value="Try again!">
+  </form>
+  <?php
+    }
+  } else {
+  ?>
+ <span>The magic code is <?php echo $_SESSION['question'] ?></span>
   <br><br>
-  <input type="text" name="email" value="<?php echo $email;?>">
-  <span class="error">* <?php echo $emailErr;?></span>
-  <br><br>  
+ <form id="my_form" action="<?php echo $self; ?>">
+  <label><input name="answer" size="80"></label>
+  <br>
+  <input type="submit" value="Submit!">
+  <input type="button" value="Reset" onclick="myFunction()">
+</form>
+  <?php
+   unset($_SESSION['question']);
+  }
+  ?>
 </div>
 
-<?php
-// define variables and set to empty values
-$nameErr = $emailErr = $genderErr = $websiteErr = "";
-$name = $email = $gender = $comment = $website = "";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  if (empty($_POST["name"])) {
-    $nameErr = "Name is required";
-  } else {
-    $name = test_input($_POST["name"]);
-    // check if name only contains letters and whitespace
-    if (!preg_match("/^[a-zA-Z ]*$/",$name)) {
-      $nameErr = "Only letters and white space allowed";
-    }
-  }
-  
-  if (empty($_POST["email"])) {
-    $emailErr = "Email is required";
-  } else {
-    $email = test_input($_POST["email"]);
-    // check if e-mail address is well-formed
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-      $emailErr = "Invalid email format";
-    }
-  }
-    
-  if (empty($_POST["website"])) {
-    $website = "";
-  } else {
-    $website = test_input($_POST["website"]);
-    // check if URL address syntax is valid (this regular expression also allows dashes in the URL)
-    if (!preg_match("/\b(?:(?:https?|ftp):\/\/|www\.)[-a-z0-9+&@#\/%?=~_|!:,.;]*[-a-z0-9+&@#\/%=~_|]/i",$website)) {
-      $websiteErr = "Invalid URL";
-    }
-  }
-
-  if (empty($_POST["comment"])) {
-    $comment = "";
-  } else {
-    $comment = test_input($_POST["comment"]);
-  }
-
-  if (empty($_POST["gender"])) {
-    $genderErr = "Gender is required";
-  } else {
-    $gender = test_input($_POST["gender"]);
-  }
-}
-
-function test_input($data) {
-  $data = trim($data);
-  $data = stripslashes($data);
-  $data = htmlspecialchars($data);
-  return $data;
-}
-?>
-
-<h2>PHP Form Validation Example</h2>
-<p><span class="error">* required field</span></p>
-<form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">  
-  Name: <input type="text" name="name" value="<?php echo $name;?>">
-  <span class="error">* <?php echo $nameErr;?></span>
-  <br><br>
-  E-mail: <input type="text" name="email" value="<?php echo $email;?>">
-  <span class="error">* <?php echo $emailErr;?></span>
-  <br><br>
-  Website: <input type="text" name="website" value="<?php echo $website;?>">
-  <span class="error"><?php echo $websiteErr;?></span>
-  <br><br>
-  Comment: <textarea name="comment" rows="5" cols="40"><?php echo $comment;?></textarea>
-  <br><br>
-  Gender:
-  <input type="radio" name="gender" <?php if (isset($gender) && $gender=="female") echo "checked";?> value="female">Female
-  <input type="radio" name="gender" <?php if (isset($gender) && $gender=="male") echo "checked";?> value="male">Male
-  <input type="radio" name="gender" <?php if (isset($gender) && $gender=="other") echo "checked";?> value="other">Other  
-  <span class="error">* <?php echo $genderErr;?></span>
-  <br><br>
-  <input type="submit" name="submit" value="Submit">  
-</form>
 
 <?php
 echo "<h2>Your Input:</h2>";
-echo $name;
+echo $hashed_str;
 echo "<br>";
-echo $email;
-echo "<br>";
-echo $website;
-echo "<br>";
-echo $comment;
-echo "<br>";
-echo $gender;
 ?>
+
+<script>
+function myFunction() {
+    document.getElementById("my_form").reset();
+}
+</script>
 
 </body>
 </html>
