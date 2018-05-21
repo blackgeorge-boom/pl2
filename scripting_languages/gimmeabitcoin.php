@@ -95,12 +95,10 @@ if (!isset($_SESSION['money'])) {
 
   <div>
     <!-- Print current "debt" -->
-    <span>I'd like to have <?php echo number_format(2000.00, 2);?> euros, you still owe me <?php echo number_format($_SESSION['money'], 2); ?>.</span>
+    <p>I'd like to have <?php echo number_format(2000.00, 2);?> euros, you still owe me <?php echo number_format($_SESSION['money'], 2); ?>.</p>
     <br><br>
 
     <?php
-
-    echo 'Answer needed before post is : ' . $_SESSION['question'];
 
     /*
      * If there is a submit, retreive the answer,
@@ -111,8 +109,6 @@ if (!isset($_SESSION['money'])) {
     if (isset($_REQUEST['answer'])) {
       $answer = $_REQUEST['answer'];
       $data = get_data($answer);
-      echo 'You answered : ' . $data["magic"];
-      echo 'Answer needed is : ' . $_SESSION['question'];
       if ($data["magic"] == $_SESSION['question']) {
         unset($_SESSION['question']);
         ?>
