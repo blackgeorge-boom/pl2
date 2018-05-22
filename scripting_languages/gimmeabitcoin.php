@@ -41,9 +41,6 @@ if (!isset($_SESSION['money'])) {
 
   <?php
 
-  $test = substr(md5(rand()), 4, 4);
-  echo 'Testing : ' . $test;
-
   /*
    * This function handles the input retrieved from
    * the forms. It cleans whitespaces, backslashes and
@@ -60,6 +57,7 @@ if (!isset($_SESSION['money'])) {
    * This functions gets the supposed bitcoin and hashes
    * it twice. Then, it retrieves the magic number (first 16 bits)
    * and the value of the bitcoin (second 16 bits).
+   * The result is an associative array.
    */
   function get_data($data) {
     $data = test_input($data);
@@ -94,6 +92,7 @@ if (!isset($_SESSION['money'])) {
   <br>
 
   <div>
+
     <!-- Print current "debt" -->
     <p>I'd like to have <?php echo number_format(2000.00, 2);?> euros, you still owe me <?php echo number_format($_SESSION['money'], 2); ?>.</p>
     <br><br>
@@ -109,38 +108,77 @@ if (!isset($_SESSION['money'])) {
     if (isset($_REQUEST['answer'])) {
       $answer = $_REQUEST['answer'];
       $data = get_data($answer);
+
+      /*
+       * If the sumbission was a valid bitcoin, 
+       * create a new magic code and print the appropriate response.
+       */
       if ($data["magic"] == $_SESSION['question']) {
         unset($_SESSION['question']);
         ?>
-        <p>Correct! - You inserted 
+        <span class="right">Right! :-)</span>
           <?php
 
           /*
-           * If it is a valid bitcoin, subtract its value
+           * Because it is a valid bitcoin, subtract its value
            * from the session's "debt".
+           * Print the bitcoins value in eurocents.
            */
           $money = (string) $data["money"];
           $money = hexdec($money);
           $money = $money / 100;
-          echo $money;
+          echo 'You gave me ' . $money . ' .';
           $_SESSION['money'] -= $money;
-          echo "<br>" . $_SESSION['money'];
+          echo "<br>"
           ?></p>
+          <!-- 
+            -- Give the user the chance to move to the next round
+            -- by revisiting current session.
+          -->
           <form action="<?php echo $self; ?>">
-            <input type="submit" value="Play again!">
+            <input type="submit" value="Continue!">
           </form>
           <?php
-        } else {
+        }  else {
           ?>
 
-          <!-- Else print that it is not a valid bitcoin. -->
+          <!-- Else print that it is not a valid bitcoin. Give the user
+            -- the chancd to play again, by revisiting current session.
+            -->
           <p>This is not a valid bitcoin! :-(</p>
           <form action="<?php echo $self; ?>">
             <input type="submit" value="Try again!">
           </form>
           <?php
         }
-      } else {
+      }
+        /*
+         * If there was no submission, check if the user
+         * won the game at the previous round. Debt should be negative.
+         * If so, print the appropriate message, and give hime the chance 
+         * to repeat the game.
+         */
+        elseif ($_SESSION['money'] < 0) {
+          ?>
+
+          <?php unset($_SESSION['money']); ?>
+          <span class="right">You made it!!!</span> 
+
+          <!-- The game is repeated, by revisiting the server page, and creating a
+            -- a new session. We assume the page's url is http://localhost/gimmeabitcoin.php .
+            -->
+          <form action="http://localhost/gimmeabitcoin.php" id="r" name="r" method="post">
+          <input type="hidden" id="reset" name="reset" value="reset" />
+          <input type="submit" name="again" id="again" value="Play again!"/>
+          <?php 
+        }   
+
+       /*
+        * Else, if there was no submission and the user had not won the game
+        * at the previous round, print the magic code and give him the chance
+        * to submit a bitcoin.
+        */   
+       else {
         ?>
         <!-- Print the current magic code. It remains unchanged until
          --  a successful submit 
@@ -151,6 +189,8 @@ if (!isset($_SESSION['money'])) {
           <label><input name="answer" size="80"></label>
           <br>
           <input type="submit" value="Submit!">
+          <!-- Simple reset button
+          -->
           <input type="button" value="Reset" onclick="myFunction()">
         </form>
         <?php
